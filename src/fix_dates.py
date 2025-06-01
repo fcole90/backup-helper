@@ -95,9 +95,6 @@ def main() -> None:
         if not os.path.isfile(file_path):
             continue
 
-        # if not file_name.startswith("20220616"):
-        #     continue
-
         creation_time = datetime.datetime.fromtimestamp(os.path.getctime(file_path))
         modification_time = datetime.datetime.fromtimestamp(os.path.getmtime(file_path))
         parsed_time = parse_file_name_date(file_name)
@@ -106,8 +103,21 @@ def main() -> None:
         )
         if isinstance(parsed_time, Exception):
             files_not_parsed_list.append(file_name)
+            continue
+
+        creation_time_diff = abs((creation_time - parsed_time).days)
+        if abs(creation_time_diff) > 2:
+            print(
+                f"\tUpdating creation time as it differs {creation_time_diff} days...",
+                end=" ",
+            )
+            os.utime(
+                file_path, (parsed_time.timestamp(), modification_time.timestamp())
+            )
+            print("Done.")
     print()
 
-    print("Files not parsed:")
-    for file_name in files_not_parsed_list:
-        print(f"{file_name}")
+    if len(files_not_parsed_list) > 0:
+        print("Files not parsed:")
+        for file_name in files_not_parsed_list:
+            print(f"{file_name}")
