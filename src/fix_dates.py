@@ -1,12 +1,35 @@
 import datetime
 import os
 from pathlib import Path
-import shutil
 import sys
+from typing import Optional, cast
+import pywintypes, win32file, win32con
 
 __CURRENT_DIR__ = Path(__file__).parent.resolve()
 __PKG_ROOT_DIR__ = __CURRENT_DIR__.resolve()
 __TEMP_DIR__ = os.path.join(__PKG_ROOT_DIR__, "temp")
+
+
+def change_winfile_creation_time(file_path: str, time: int | float):
+    """From: https://stackoverflow.com/a/4996407/2219492"""
+
+    wintime = pywintypes.Time(time)
+    winfile = win32file.CreateFile(
+        file_path,
+        win32con.GENERIC_WRITE,
+        win32con.FILE_SHARE_READ
+        | win32con.FILE_SHARE_WRITE
+        | win32con.FILE_SHARE_DELETE,
+        None,
+        win32con.OPEN_EXISTING,
+        win32con.FILE_ATTRIBUTE_NORMAL,
+        None,
+    )
+
+    winfile_int = cast(int, winfile)  # The type seems incompatible
+    win32file.SetFileTime(winfile_int, wintime, None, None)
+
+    winfile.close()
 
 
 def parse_date_from_file_name(file_name: str) -> datetime.datetime | Exception:
@@ -83,16 +106,23 @@ def parse_date_from_file_name(file_name: str) -> datetime.datetime | Exception:
 
 
 def update_file_times(
-    dir_path: str, file_name: str, times: tuple[int, int] | tuple[float, float]
+    dir_path: str,
+    file_name: str,
+    creation_time: Optional[int | float] = None,
+    access_time: Optional[int | float] = None,
+    modification_time: Optional[int | float] = None,
 ) -> None:
-    # We need to move the file to a temporary location, as depending on the file system
-    # it may not be possible to change the creation and modification times.
-    os.makedirs(__TEMP_DIR__, exist_ok=True)
+    if creation_time is None and access_time is None and modification_time is None:
+        raise ValueError(
+            "At least one of creation, access or modification time must be provided"
+        )
     file_path = os.path.join(dir_path, file_name)
-    temp_file_path = os.path.join(__TEMP_DIR__, file_name)
-    shutil.move(file_path, temp_file_path)
-    os.utime(temp_file_path, times)
-    shutil.move(temp_file_path, file_path)
+
+    if creation_time is not None:
+        change_winfile_creation_time(file_path, creation_time)
+
+    if access_time is not None and modification_time is not None:
+        os.utime(file_path, (access_time, modification_time))
 
 
 def main() -> None:
@@ -130,11 +160,7 @@ def main() -> None:
                 f"\tUpdating creation time as it differs {creation_time_diff} days...",
                 end=" ",
             )
-            update_file_times(
-                dir_path,
-                file_name,
-                (parsed_creation_time.timestamp(), modification_time.timestamp()),
-            )
+            update_file_times(dir_path, file_name, parsed_creation_time.timestamp())
             files_fixed.append(file_name)
             print("Done.")
     print()
