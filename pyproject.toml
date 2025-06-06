@@ -6,7 +6,7 @@ authors = [{ name = "Fabio Colella", email = "fcole90@gmail.com" }]
 license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.12,<4.0"
-dependencies = ["pywin32 (>=310,<311) ; sys_platform == \"win32\""]
+dependencies = ["pywin32 (>=310,<311) ; platform_system == \"Windows\""]
 
 [tool.poetry.requires-plugins]
 poethepoet = { version = "~0.34.0", extras = ["poetry_plugin"] }
