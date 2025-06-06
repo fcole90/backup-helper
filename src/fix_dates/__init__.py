@@ -2,34 +2,12 @@ import datetime
 import os
 from pathlib import Path
 import sys
-from typing import Optional, cast
-import pywintypes, win32file, win32con
+from typing import Optional
+from src.fix_dates.update_file_creation_time import update_file_creation_time
 
 __CURRENT_DIR__ = Path(__file__).parent.resolve()
 __PKG_ROOT_DIR__ = __CURRENT_DIR__.resolve()
 __TEMP_DIR__ = os.path.join(__PKG_ROOT_DIR__, "temp")
-
-
-def change_winfile_creation_time(file_path: str, time: int | float):
-    """From: https://stackoverflow.com/a/4996407/2219492"""
-
-    wintime = pywintypes.Time(time)
-    winfile = win32file.CreateFile(
-        file_path,
-        win32con.GENERIC_WRITE,
-        win32con.FILE_SHARE_READ
-        | win32con.FILE_SHARE_WRITE
-        | win32con.FILE_SHARE_DELETE,
-        None,
-        win32con.OPEN_EXISTING,
-        win32con.FILE_ATTRIBUTE_NORMAL,
-        None,
-    )
-
-    winfile_int = cast(int, winfile)  # The type seems incompatible
-    win32file.SetFileTime(winfile_int, wintime, None, None)
-
-    winfile.close()
 
 
 def parse_date_from_file_name(file_name: str) -> datetime.datetime | Exception:
@@ -119,7 +97,7 @@ def update_file_times(
     file_path = os.path.join(dir_path, file_name)
 
     if creation_time is not None:
-        change_winfile_creation_time(file_path, creation_time)
+        update_file_creation_time(file_path, creation_time)
 
     if access_time is not None and modification_time is not None:
         os.utime(file_path, (access_time, modification_time))
