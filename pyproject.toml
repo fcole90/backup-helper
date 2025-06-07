@@ -1,5 +1,5 @@
 [project]
-name = "python-poetry-starter"
+name = "backup-helper"
 version = "0.1.0"
 description = ""
 authors = [{ name = "Fabio Colella", email = "fcole90@gmail.com" }]
