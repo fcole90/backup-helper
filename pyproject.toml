@@ -46,6 +46,7 @@ packages = [{ include = "src" }]
 [tool.poetry.scripts]
 main = "src.main:main"
 fix-dates = "src.fix_dates:main"
+remove-duplicates = "src.remove_duplicates:main"
 
 [tool.poe.tasks]
 test = "python -m pytest"
