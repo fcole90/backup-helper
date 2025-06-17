@@ -1,6 +1,15 @@
 from .__helper_types import CLIValue
 from collections.abc import Callable
-from typing import Any, Literal, Optional, TypeVar, Callable, ParamSpec
+from typing import (
+    Any,
+    Literal,
+    Optional,
+    TypeVar,
+    Callable,
+    ParamSpec,
+    Protocol,
+    type_check_only,
+)
 from .dag import KwargReprNode
 
 type StreamSelector = Literal["a", "v"]
@@ -18,7 +27,7 @@ class Stream:
         self,
         upstream_node: Node,
         upstream_label: StreamLabel,
-        node_types: type[Node],
+        node_types: dict[Node, Node],
         upstream_selector: Optional[StreamSelector] = None,
     ) -> None: ...
     def __hash__(self) -> int: ...
@@ -112,7 +121,9 @@ class Node(KwargReprNode):
         kwargs: CLIValue = ...,
     ) -> None: ...
     def stream(
-        self, label: StreamLabel = ..., selector: StreamSelector = ...
+        self,
+        label: Optional[StreamLabel] = None,
+        selector: Optional[StreamSelector] = None,
     ) -> Stream:
         """Create an outgoing stream originating from this node.
 
@@ -135,7 +146,7 @@ class Node(KwargReprNode):
         """
         ...
 
-class FilterableStream(Stream):
+class FilterableStream(Stream, FilterOperatorProtocol):
     def __init__(
         self,
         upstream_node: Node,
@@ -188,23 +199,96 @@ class GlobalNode(Node):
 DecoratorParamSpec = ParamSpec("DecoratorParamSpec")
 DecoratorReturn = TypeVar("DecoratorReturn")
 
+# This decorator assigns the given function to the given stream class.
 def stream_operator(
     stream_classes: set[type[Stream]] = {Stream}, name: str | None = None
 ) -> Callable[
     [Callable[DecoratorParamSpec, DecoratorReturn]],
     Callable[DecoratorParamSpec, DecoratorReturn],
-]: ...
+]:
+    """Assigns methods (like .view, etc.) to a given Stream"""
+    ...
+
 def filter_operator(
     name: str | None = None,
 ) -> Callable[
     [Callable[DecoratorParamSpec, DecoratorReturn]],
     Callable[DecoratorParamSpec, DecoratorReturn],
-]: ...
+]:
+    """Assigns methods (like .output, .filter, etc.) to FilterableStream"""
+    ...
+
 def output_operator(
     name: str | None = None,
 ) -> Callable[
     [Callable[DecoratorParamSpec, DecoratorReturn]],
     Callable[DecoratorParamSpec, DecoratorReturn],
-]: ...
+]:
+    """Assigns methods (like .compile, .run, etc.) to OutputStream"""
+    ...
+
+@type_check_only
+class FilterOperatorProtocol(Protocol):
+    """
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.filter_multi_output = filter_multi_output
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.filter = filter
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.filter_ = filter_
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.split = split
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.asplit = asplit
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.setpts = setpts
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.trim = trim
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.overlay = overlay
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.hflip = hflip
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.vflip = vflip
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.crop = crop
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.drawbox = drawbox
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.drawtext = drawtext
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.overlay = overlay
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.hflip = hflip
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.vflip = vflip
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.crop = crop
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.drawbox = drawbox
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.drawtext = drawtext
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.hflip = hflip
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.vflip = vflip
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.crop = crop
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.drawbox = drawbox
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.drawtext = drawtext
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.crop = crop
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.drawbox = drawbox
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.drawtext = drawtext
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.drawbox = drawbox
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.drawtext = drawtext
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.drawtext = drawtext
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.concat = concat
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.zoompan = zoompan
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.hue = hue
+    stream_operator applying: <class 'ffmpeg.nodes.FilterableStream'>.colorchannelmixer = colorchannelmixer
+    """
+
+    def output(*streams_and_filename: str | Stream, **kwargs: CLIValue) -> OutputStream:
+        """Output file URL
+
+        Syntax:
+            `ffmpeg.output(stream1[, stream2, stream3...], filename, **ffmpeg_args)`
+
+        Any supplied keyword arguments are passed to ffmpeg verbatim (e.g.
+        ``t=20``, ``f='mp4'``, ``acodec='pcm'``, ``vcodec='rawvideo'``,
+        etc.).  Some keyword-arguments are handled specially, as shown below.
+
+        Args:
+            video_bitrate: parameter for ``-b:v``, e.g. ``video_bitrate=1000``.
+            audio_bitrate: parameter for ``-b:a``, e.g. ``audio_bitrate=200``.
+            format: alias for ``-f`` parameter, e.g. ``format='mp4'``
+                (equivalent to ``f='mp4'``).
+
+        If multiple streams are provided, they are mapped to the same
+        output.
+
+        To tell ffmpeg to write to stdout, use ``pipe:`` as the filename.
+
+        Official documentation: `Synopsis <https://ffmpeg.org/ffmpeg.html#Synopsis>`__
+        """
+        ...
 
 __all__ = ["Stream"]

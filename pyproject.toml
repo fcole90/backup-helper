@@ -49,6 +49,7 @@ packages = [{ include = "src" }]
 [tool.poetry.scripts]
 main = "src.main:main"
 fix-dates = "src.fix_dates:main"
+converter = "src.converter:main"
 
 [tool.poe.tasks]
 test = "python -m pytest"
