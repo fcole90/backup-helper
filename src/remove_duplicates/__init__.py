@@ -1,57 +1,14 @@
 import os
 from pathlib import Path
-import shlex
-import subprocess
+
 import sys
+
+from utils.cli.adb import __ADB_PREFIX__
+from utils.cli import path_exists, path_is_dir
 
 __CURRENT_DIR__ = Path(__file__).parent.resolve()
 __PKG_ROOT_DIR__ = __CURRENT_DIR__.resolve()
 __TEMP_DIR__ = os.path.join(__PKG_ROOT_DIR__, "temp")
-
-__ADB_PREFIX__ = "adb:"
-
-
-def is_adb_path(path: str) -> bool:
-    return path.startswith(__ADB_PREFIX__)
-
-
-def strip_adb_prefix(path: str) -> str:
-    if not is_adb_path(path):
-        raise ValueError(f"Path is not on adb: {path}")
-    return path[len(__ADB_PREFIX__) :]
-
-
-def run_command(command: str) -> tuple[str, str]:
-    result = subprocess.run(shlex.split(command), capture_output=True, text=True)
-    return result.stdout, result.stderr
-
-
-def run_adb_command(command: str) -> tuple[str, str]:
-    return run_command(f"adb shell {command}")
-
-
-def adb_path_exists(path: str) -> bool:
-    _, err = run_adb_command(f"ls {path}")
-    return err == ""
-
-
-def path_exists(path: str) -> bool:
-    if is_adb_path(path):
-        return adb_path_exists(strip_adb_prefix(path))
-
-    return os.path.exists(path)
-
-
-def path_is_dir(path: str) -> bool:
-    return os.path.isdir(path)
-
-
-def remove(path: str) -> None:
-    os.remove(path)
-
-
-def list_dir(path: str) -> list[str]:
-    return os.listdir(path)
 
 
 def main():
