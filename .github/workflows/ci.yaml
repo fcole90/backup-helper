@@ -21,14 +21,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # - name: Install poetry
-    #   run: pipx install poetry
+    - name: Install poetry
+      run: pipx install poetry
     
     - uses: actions/setup-python@v5
       id: 'setup_python_step'
       with:
         python-version: '3.12'
-        # cache: 'poetry'
+        cache: 'poetry'
     - name: Fix pipx setup on Windows
       if: runner.os == 'Windows'
       # Based on https://pipx.pypa.io/stable/installation/#windows
@@ -50,8 +50,7 @@ jobs:
     - run: pipx --version
     - run: pipx ensurepath
     - run: pipx --version
-    - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry --version
-    - run: poetry config --list
+    - run: pipx reinstall poetry --python '${{ steps.setup_python_step.outputs.python-path }}'
 
     # - name: Workaround for Windows CI for https://github.com/python-poetry/poetry/issues/10028
     #   run: pipx inject poetry poethepoet[poetry_plugin]
