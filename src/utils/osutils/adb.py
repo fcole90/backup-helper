@@ -1,7 +1,7 @@
 __ADB_PREFIX__ = "adb:"
 
 
-from utils.cli import core
+from utils.osutils import core
 
 
 def is_adb_path(path: str) -> bool:

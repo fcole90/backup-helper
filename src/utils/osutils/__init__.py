@@ -1,5 +1,5 @@
 import os
-from utils.cli import adb
+from utils.osutils import adb
 
 
 def path_exists(path: str) -> bool:

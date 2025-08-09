@@ -3,8 +3,8 @@ from pathlib import Path
 
 import sys
 
-from utils.cli.adb import __ADB_PREFIX__
-from utils.cli import path_exists, path_is_dir
+from utils.osutils.adb import __ADB_PREFIX__
+from utils.osutils import path_exists, path_is_dir
 
 __CURRENT_DIR__ = Path(__file__).parent.resolve()
 __PKG_ROOT_DIR__ = __CURRENT_DIR__.resolve()
