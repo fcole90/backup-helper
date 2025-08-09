@@ -14,25 +14,68 @@ def strip_adb_prefix(path: str) -> str:
     return path[len(__ADB_PREFIX__) :]
 
 
-def run_command(command: str) -> tuple[str, str]:
+def run_command(command: str) -> core.RunCommandResult:
     return core.run_command(f"adb shell {command}")
 
 
 def path_exists(path: str) -> bool:
-    _, err = run_command(f"ls {path}")
-    return err == ""
+    """Check if path exists (file or dir) on the ADB device"""
+    result = run_command(f'test -e "{path}"')
+    return result.ok()
 
 
 def path_is_dir(path: str) -> bool:
-    # return os.path.isdir(path)
-    raise NotImplementedError
+    """Check if path is directory on the ADB device."""
+    result = run_command(f'test -d "{path}"')
+    return result.ok()
 
 
 def remove(path: str) -> None:
-    # os.remove(path)
-    raise NotImplementedError
+    """Remove a file on the ADB device, mimicking Python's os.remove behavior.
+
+    Raises:
+        FileNotFoundError: If the path does not exist.
+        IsADirectoryError: If the path is a directory.
+        RuntimeError: If removal fails for other reasons.
+    """
+    if not path_exists(path):
+        raise FileNotFoundError(f"No such file or directory: '{path}'")
+
+    if path_is_dir(path):
+        raise IsADirectoryError(f"Is a directory: '{path}'")
+
+    # Remove the file (no -r, since os.remove does not remove directories)
+    result = run_command(f'rm "{path}"')
+    if result.ok():
+        raise RuntimeError(
+            f"Failed to remove file '{path}': {result.stderr.strip() or result.stdout.strip()}"
+        )
 
 
 def list_dir(path: str) -> list[str]:
-    # return os.listdir(path)
-    raise NotImplementedError
+    """
+    Return a list of entries in the directory, mimicking os.listdir for ADB.
+    Raises:
+        FileNotFoundError: If the path does not exist.
+        NotADirectoryError: If the path is not a directory.
+        OSError: If the command fails.
+    """
+    if not path_exists(path):
+        raise FileNotFoundError(f"No such file or directory: '{path}'")
+    if not path_is_dir(path):
+        raise NotADirectoryError(f"Not a directory: '{path}'")
+
+    # Use -1 for one filename per line, sorted alphabetically
+    result = run_command(f'ls -1 "{path}"')
+    if result.exit_code != 0:
+        raise OSError(
+            f"Could not list directory '{path}': {result.stderr.strip() or result.stdout.strip()}"
+        )
+    # os.listdir does not return '.' or '..'
+    entries = [
+        line
+        for line in result.stdout.splitlines()
+        if line.strip() != "" and line not in (".", "..")
+    ]
+
+    return entries
