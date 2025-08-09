@@ -23,23 +23,41 @@ jobs:
 
     # - name: Install poetry
     #   run: pipx install poetry
+    
     - uses: actions/setup-python@v5
       id: 'setup_python_step'
       with:
         python-version: '3.12'
         # cache: 'poetry'
+    - name: Fix pipx setup on Windows
+      if: runner.os == 'Windows'
+      # Based on https://pipx.pypa.io/stable/installation/#windows
+      run: |
+        $NEW_LOCATION = Join-Path "$HOME" 'pipx'
+        $cache_dir = pipx environment --value PIPX_VENV_CACHEDIR
+        $logs_dir = pipx environment --value PIPX_LOG_DIR
+        $trash_dir = pipx environment --value PIPX_TRASH_DIR
+        $home_dir = pipx environment --value PIPX_HOME
+
+        Remove-Item -Recurse -Force -ErrorAction SilentlyContinue "$cache_dir", "$logs_dir", "$trash_dir"
+
+        # Remove the destination directory to ensure rename behavior of `Move-Item`
+        Remove-Item -Recurse -Force -ErrorAction SilentlyContinue "$NEW_LOCATION"
+
+        Move-Item -Path $home_dir -Destination "$NEW_LOCATION"
+        pipx reinstall-all
     - run: python --version
     - run: pipx --version
     - run: pipx ensurepath
     - run: pipx --version
-    - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' nox --version
-    # - run: poetry config --list
+    - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry --version
+    - run: poetry config --list
 
     # - name: Workaround for Windows CI for https://github.com/python-poetry/poetry/issues/10028
     #   run: pipx inject poetry poethepoet[poetry_plugin]
     #   if: runner.os == 'Windows'
     
-    # - run: poetry install
-    # - run: poetry poe test
-    # - run: poetry poe lint
-    # - run: poetry poe typecheck
+    - run: poetry install
+    - run: poetry poe test
+    - run: poetry poe lint
+    - run: poetry poe typecheck
