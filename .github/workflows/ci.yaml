@@ -52,11 +52,15 @@ jobs:
     - run: pipx --version
     # - run: pipx reinstall poetry --python '${{ steps.setup_python_step.outputs.python-path }}'
 
-    # - name: Workaround for Windows CI for https://github.com/python-poetry/poetry/issues/10028
-    #   run: pipx inject poetry poethepoet[poetry_plugin]
-    #   if: runner.os == 'Windows'
+    - name: Workaround for Windows CI for https://github.com/python-poetry/poetry/issues/10028
+      run: pipx inject poetry poethepoet[poetry_plugin]
+      if: runner.os == 'Windows'
     
-    - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry install
-    - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry poe test
-    - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry poe lint
-    - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry poe typecheck
+    # - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry install
+    # - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry poe test
+    # - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry poe lint
+    # - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry poe typecheck
+    - run: pipx run poetry install
+    - run: pipx run poetry poe test
+    - run: pipx run poetry poe lint
+    - run: pipx run poetry poe typecheck
