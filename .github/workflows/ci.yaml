@@ -56,7 +56,7 @@ jobs:
     #   run: pipx inject poetry poethepoet[poetry_plugin]
     #   if: runner.os == 'Windows'
     
-    - run: poetry install
-    - run: poetry poe test
-    - run: poetry poe lint
-    - run: poetry poe typecheck
+    - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry install
+    - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry poe test
+    - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry poe lint
+    - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry poe typecheck
