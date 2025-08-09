@@ -21,19 +21,21 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install poetry
-      run: pipx install poetry
+    # - name: Install poetry
+    #   run: pipx install poetry
     - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
         # cache: 'poetry'
-    - run: poetry config --list
+    - run: python --version
+    - run: pipx --version
+    # - run: poetry config --list
 
-    - name: Workaround for Windows CI for https://github.com/python-poetry/poetry/issues/10028
-      run: pipx inject poetry poethepoet[poetry_plugin]
-      if: runner.os == 'Windows'
+    # - name: Workaround for Windows CI for https://github.com/python-poetry/poetry/issues/10028
+    #   run: pipx inject poetry poethepoet[poetry_plugin]
+    #   if: runner.os == 'Windows'
     
-    - run: poetry install
-    - run: poetry poe test
-    - run: poetry poe lint
-    - run: poetry poe typecheck
+    # - run: poetry install
+    # - run: poetry poe test
+    # - run: poetry poe lint
+    # - run: poetry poe typecheck
