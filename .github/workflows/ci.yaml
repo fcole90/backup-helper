@@ -24,11 +24,15 @@ jobs:
     # - name: Install poetry
     #   run: pipx install poetry
     - uses: actions/setup-python@v5
+      id: 'setup_python_step'
       with:
         python-version: '3.12'
         # cache: 'poetry'
     - run: python --version
     - run: pipx --version
+    - run: pipx ensurepath
+    - run: pipx --version
+    - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' nox --version
     # - run: poetry config --list
 
     # - name: Workaround for Windows CI for https://github.com/python-poetry/poetry/issues/10028
