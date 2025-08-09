@@ -24,11 +24,11 @@ jobs:
     - name: Install poetry
       run: pipx install poetry
     
-    - uses: actions/setup-python@v5
-      id: 'setup_python_step'
-      with:
-        python-version: '3.12'
-        cache: 'poetry'
+    # - uses: actions/setup-python@v5
+    #   id: 'setup_python_step'
+    #   with:
+    #     python-version: '3.12'
+    #     cache: 'poetry'
     - name: Fix pipx setup on Windows
       if: runner.os == 'Windows'
       # Based on https://pipx.pypa.io/stable/installation/#windows
