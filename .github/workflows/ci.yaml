@@ -24,11 +24,17 @@ jobs:
     - name: Install poetry
       run: pipx install poetry
     
-    # - uses: actions/setup-python@v5
-    #   id: 'setup_python_step'
-    #   with:
-    #     python-version: '3.12'
-    #     cache: 'poetry'
+    - uses: actions/setup-python@v5
+      id: 'setup_python_step'
+      with:
+        python-version: '3.12'
+        cache: 'poetry'
+    - run: echo $HOME
+    - run: echo $PIPX_VENV_CACHEDIR
+    - run: echo $PIPX_LOG_DIR
+    - run: echo $PIPX_TRASH_DIR
+    - run: echo $PIPX_HOME
+
     - name: Fix pipx setup on Windows
       if: runner.os == 'Windows'
       # Based on https://pipx.pypa.io/stable/installation/#windows
@@ -52,11 +58,15 @@ jobs:
     - run: pipx --version
     # - run: pipx reinstall poetry --python '${{ steps.setup_python_step.outputs.python-path }}'
 
-    # - name: Workaround for Windows CI for https://github.com/python-poetry/poetry/issues/10028
-    #   run: pipx inject poetry poethepoet[poetry_plugin]
-    #   if: runner.os == 'Windows'
+    - name: Workaround for Windows CI for https://github.com/python-poetry/poetry/issues/10028
+      run: pipx inject poetry poethepoet[poetry_plugin] --python '${{ steps.setup_python_step.outputs.python-path }}'
+      if: runner.os == 'Windows'
     
-    - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry install
-    - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry poe test
-    - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry poe lint
-    - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry poe typecheck
+    # - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry install
+    # - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry poe test
+    # - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry poe lint
+    # - run: pipx run --python '${{ steps.setup_python_step.outputs.python-path }}' poetry poe typecheck
+    - run: pipx run poetry install
+    - run: pipx run poetry poe test
+    - run: pipx run poetry poe lint
+    - run: pipx run poetry poe typecheck
