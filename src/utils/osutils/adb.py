@@ -14,18 +14,26 @@ def strip_adb_prefix(path: str) -> str:
     return path[len(__ADB_PREFIX__) :]
 
 
+def get_path_only(path: str) -> str:
+    if is_adb_path(path):
+        return strip_adb_prefix(path)
+    return path
+
+
 def run_command(command: str) -> core.RunCommandResult:
     return core.run_command(f"adb shell {command}")
 
 
 def path_exists(path: str) -> bool:
     """Check if path exists (file or dir) on the ADB device"""
+    path = get_path_only(path)
     result = run_command(f'test -e "{path}"')
     return result.ok()
 
 
 def path_is_dir(path: str) -> bool:
     """Check if path is directory on the ADB device."""
+    path = get_path_only(path)
     result = run_command(f'test -d "{path}"')
     return result.ok()
 
@@ -38,6 +46,7 @@ def remove(path: str) -> None:
         IsADirectoryError: If the path is a directory.
         RuntimeError: If removal fails for other reasons.
     """
+    path = get_path_only(path)
     if not path_exists(path):
         raise FileNotFoundError(f"No such file or directory: '{path}'")
 
@@ -60,6 +69,7 @@ def list_dir(path: str) -> list[str]:
         NotADirectoryError: If the path is not a directory.
         OSError: If the command fails.
     """
+    path = get_path_only(path)
     if not path_exists(path):
         raise FileNotFoundError(f"No such file or directory: '{path}'")
     if not path_is_dir(path):
