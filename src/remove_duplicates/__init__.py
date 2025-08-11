@@ -3,7 +3,6 @@ from pathlib import Path
 
 import sys
 
-from utils.osutils.adb import __ADB_PREFIX__
 from utils.osutils import path_exists, path_is_dir
 
 __CURRENT_DIR__ = Path(__file__).parent.resolve()
