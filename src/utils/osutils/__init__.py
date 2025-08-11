@@ -1,4 +1,5 @@
 import os
+import shutil
 from utils.osutils import adb
 
 
@@ -25,3 +26,10 @@ def list_dir(path: str) -> list[str]:
     if adb.is_adb_path(path):
         return adb.list_dir(path)
     return os.listdir(path)
+
+
+def move(src: str, dst: str) -> None:
+    if adb.is_adb_path(src) or adb.is_adb_path(dst):
+        adb.move(src, dst)
+    else:
+        shutil.move(src, dst)

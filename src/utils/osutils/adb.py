@@ -89,3 +89,46 @@ def list_dir(path: str) -> list[str]:
     ]
 
     return entries
+
+
+def _pull(src: str, dst: str) -> None:
+    pass
+
+
+def _push(src: str, dst: str) -> None:
+    pass
+
+
+def _mv(src: str, dst: str) -> None:
+    pass
+
+
+def move(src: str, dst: str) -> None:
+    """
+    Move a file or directory on the ADB device.
+    Mimics shutil.move but works only for device paths.
+
+    Raises:
+        FileNotFoundError: if src does not exist.
+        RuntimeError: if the move operation fails.
+    """
+
+    # Both on device
+    if is_adb_path(src) and is_adb_path(dst):
+        src = get_path_only(src)
+        dst = get_path_only(dst)
+        return _mv(src, dst)
+
+    # Moving from device to local
+    if is_adb_path(src) and not is_adb_path(dst):
+        src = get_path_only(src)
+        return _pull(src, dst)
+
+    # Moving from local to device
+    if not is_adb_path(src) and is_adb_path(dst):
+        dst = get_path_only(dst)
+        return _push(src, dst)
+
+    raise RuntimeError(
+        f"Unsupported move operation: neither src nor dst are ADB paths."
+    )
