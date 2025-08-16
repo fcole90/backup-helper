@@ -92,15 +92,45 @@ def list_dir(path: str) -> list[str]:
 
 
 def _pull(src: str, dst: str) -> None:
-    pass
+    """
+    Pulls src (on device) to dst (local).
+    Raises RuntimeError if adb pull fails.
+    """
+    # Assumes src is already stripped of prefix!
+    result = core.run_command(f'adb pull "{src}" "{dst}"')
+    if not result.ok():
+        raise RuntimeError(
+            f"Failed to pull '{src}' to '{dst}': "
+            f"{result.stderr.strip() or result.stdout.strip()}"
+        )
 
 
 def _push(src: str, dst: str) -> None:
-    pass
+    """
+    Pushes src (local) to dst (on device).
+    Raises RuntimeError if adb push fails.
+    """
+    # Assumes dst is already stripped of prefix!
+    result = core.run_command(f'adb push "{src}" "{dst}"')
+    if not result.ok():
+        raise RuntimeError(
+            f"Failed to push '{src}' to '{dst}': "
+            f"{result.stderr.strip() or result.stdout.strip()}"
+        )
 
 
 def _mv(src: str, dst: str) -> None:
-    pass
+    """
+    Moves src to dst on device.
+    Raises RuntimeError if adb shell mv fails.
+    """
+    # Assumes src and dst are already stripped of prefix!
+    result = core.run_command(f'adb shell mv "{src}" "{dst}"')
+    if not result.ok():
+        raise RuntimeError(
+            f"Failed to move '{src}' to '{dst}': "
+            f"{result.stderr.strip() or result.stdout.strip()}"
+        )
 
 
 def move(src: str, dst: str) -> None:
